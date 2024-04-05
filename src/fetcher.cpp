@@ -8,6 +8,9 @@
 // everything.curl.dev
 #include <curl/curl.h>
 
+#include <libxml/HTMLparser.h>
+#include <libxml/xpath.h>
+
 #include "fetcher.h"
 
 static size_t handle_chunk(void *contents, size_t size, size_t nmemb, void* userp) {
@@ -65,3 +68,68 @@ void Fetcher::dump(const char* filepath, std::string content) {
     }
 }
 
+
+std::string Fetcher::findTitle(std::string html) {
+    htmlDocPtr doc;
+    std::string title;
+
+    doc = htmlReadMemory(html.c_str(), html.length(), nullptr, nullptr, HTML_PARSE_NOERROR);
+
+    if(!doc) {
+        std::cerr << "failed to parse html" << std::endl;
+        return title;
+    }
+
+    const xmlChar* titleExpr = (const xmlChar*) "/html/body/div[2]/div/div[3]/main/header/h1/span";
+
+    xmlXPathContextPtr ctx;
+    xmlXPathObjectPtr obj;
+
+    ctx = xmlXPathNewContext(doc);
+    xmlNodeSetPtr nodes;
+
+    obj = xmlXPathEvalExpression(titleExpr, ctx);
+    nodes = obj->nodesetval;
+    for(int i = 0; i < nodes->nodeNr; ++i) {
+        xmlChar *content = xmlNodeGetContent(nodes->nodeTab[i]);
+        title = std::string(reinterpret_cast<char*>(content));
+    }
+
+    xmlXPathFreeContext(ctx);
+    xmlFreeDoc(doc);
+    
+    return title;
+}
+
+
+std::vector<std::string> Fetcher::findLinks(std::string html) {
+    htmlDocPtr doc;
+    std::vector<std::string> links;
+
+    doc = htmlReadMemory(html.c_str(), html.length(), nullptr, nullptr, HTML_PARSE_NOERROR);
+
+    if(!doc) {
+        std::cerr << "failed to parse html" << std::endl;
+        return links;
+    }
+
+    const xmlChar* linkExpr = (const xmlChar*) "//a[contains(@href, '/wiki/')]/@href";
+
+    xmlXPathContextPtr ctx;
+    xmlXPathObjectPtr obj;
+
+    ctx = xmlXPathNewContext(doc);
+    xmlNodeSetPtr nodes;
+
+    obj = xmlXPathEvalExpression(linkExpr, ctx);
+    nodes = obj->nodesetval;
+    for(int i = 0; i < nodes->nodeNr; ++i) {
+        xmlChar *content = xmlNodeGetContent(nodes->nodeTab[i]);
+        links.push_back( std::string( reinterpret_cast<char*>(content) ) );
+    }
+    
+    xmlXPathFreeContext(ctx);
+    xmlFreeDoc(doc);
+
+    return links;
+}
