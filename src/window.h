@@ -27,5 +27,5 @@ private:
     GLFWwindow* window;
     unsigned int shaderProgram;
 
-    std::vector<Node> nodes;
+    std::vector<Node*> nodes;
 };

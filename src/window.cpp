@@ -13,6 +13,10 @@ Window::Window(const char *title): title(title) {
 }
 
 Window::~Window() {
+
+    for(auto node : nodes)
+        delete node;
+
     glfwDestroyWindow(window);
     glfwTerminate();
 }
@@ -37,7 +41,6 @@ void Window::initShaders() {
     fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
     try {
-
         vertexFile.open(vertexPath);
         fragmentFile.open(fragmentPath);
 
@@ -121,7 +124,7 @@ bool Window::init() {
 
     initShaders();
 
-    nodes.push_back(Node());
+    nodes.push_back(new Node());
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); 
     
@@ -135,8 +138,16 @@ void Window::run() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-        for(auto node : nodes)
-            node.draw();
+        for(unsigned int i = 0; i < nodes.size(); ++i)
+            nodes[i]->draw();
+
+        #if 0
+        GLenum err;
+        while((err = glGetError()) != GL_NO_ERROR)
+        {
+            std::cout << "ERR::WINDOW opengl: " << err << std::endl;
+        } 
+        #endif
 
         glfwSwapBuffers(window);
         glfwPollEvents();    

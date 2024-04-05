@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <cmath>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -8,12 +9,33 @@
 
 
 Node::Node() {
+    initVAO();
+}
 
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
-    };  
+void Node::initVAO() {
+    resolution = 100;
+
+    float angleSpacing = 2 * M_PI / resolution;
+    float vertices[resolution * 3];
+
+    for(int i = 0; i < resolution; ++i) {
+        float angle = angleSpacing * i;
+    
+        int index = i*3;
+        vertices[index + 0] = cos(angle); 
+        vertices[index + 1] = sin(angle); 
+        vertices[index + 2] = 0.0; 
+    }
+
+    #if 0
+    for(int i = 0; i < resolution; ++i) {
+        int index = i*3;
+        std::cout << vertices[index + 0] << " "  
+            << vertices[index + 1] << " "
+            << vertices[index + 2]
+            << std::endl;
+    }
+    #endif
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO); 
@@ -31,14 +53,14 @@ Node::Node() {
 }
 
 Node::~Node() {
-
-
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 }
 
 void Node::draw() {
 
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_LINE_LOOP, 0, resolution);
 
 }
 
