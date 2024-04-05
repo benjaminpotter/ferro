@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "node.h"
+#include "shader.h"
 
 #pragma once
 
@@ -25,7 +26,7 @@ private:
 private:
     const char *title;
     GLFWwindow* window;
-    unsigned int shaderProgram;
+    Shader *shader;
 
     std::vector<Node*> nodes;
 };
