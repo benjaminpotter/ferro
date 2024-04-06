@@ -11,7 +11,6 @@
 #include "window.h"
 
 #define VERSION "v0.1"
-#define TARGET_URL "https://en.wikipedia.org/wiki/Cock"
 
 
 int main(int argc, char* argv[]) {
@@ -19,7 +18,7 @@ int main(int argc, char* argv[]) {
 
     curl_global_init(CURL_GLOBAL_ALL);
 
-    Window *window = new Window("Wikipedia Scraper");
+    Window *window = new Window("Wikipedia Scraper (Ferro)");
 
     if(!window->init())
        return 1; 
