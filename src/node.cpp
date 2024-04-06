@@ -10,21 +10,28 @@
 
 Node::Node() {
     initVAO();
+
+    position = glm::vec3(250, 250, 0);
+    scale = glm::vec3(100, 100, 0);
 }
 
 void Node::initVAO() {
     resolution = 100;
 
-    float angleSpacing = 2 * M_PI / resolution;
+    float angleSpacing = 2 * M_PI / (resolution-2);
     float vertices[resolution * 3];
 
-    for(int i = 0; i < resolution; ++i) {
+    vertices[0] = 0.0f;
+    vertices[1] = 0.0f;
+    vertices[2] = 0.0f;
+
+    for(int i = 1; i < resolution; ++i) {
         float angle = angleSpacing * i;
     
         int index = i*3;
         vertices[index + 0] = cos(angle); 
         vertices[index + 1] = sin(angle); 
-        vertices[index + 2] = 0.0; 
+        vertices[index + 2] = 0.0f;
     }
 
     #if 0
@@ -60,7 +67,7 @@ Node::~Node() {
 void Node::draw() {
 
     glBindVertexArray(VAO);
-    glDrawArrays(GL_LINE_LOOP, 0, resolution);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, resolution);
 
 }
 

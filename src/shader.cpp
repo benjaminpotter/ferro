@@ -93,3 +93,8 @@ void Shader::load(std::string vertexPath, std::string fragmentPath) {
 void Shader::use() {
     glUseProgram(shaderProgram);
 }
+
+void Shader::setMat4(const std::string &name, const glm::mat4 &value) {
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, GL_FALSE, &value[0][0]);
+}
+

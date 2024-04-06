@@ -21,7 +21,10 @@ public:
 
 private:
     void initGLFW();
+    void initImGui();
     void initShaders();
+
+    void drawNodes();
 
 private:
     const char *title;
