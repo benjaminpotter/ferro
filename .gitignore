@@ -1,5 +1,9 @@
 build/*
 bin/*
 
+# doxygen
+html/*
+latex/*
+
 *.swp
 
