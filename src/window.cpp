@@ -20,9 +20,7 @@
 #define WINDOW_HEIGHT 1080
 
 Window::Window(const char *title): title(title) {
-    initGLFW();
 
-    shader = new Shader();
 }
 
 Window::~Window() {
@@ -30,7 +28,8 @@ Window::~Window() {
     for(auto node : nodes)
         delete node;
 
-    delete shader;
+    for(auto text : texts)
+        delete text;
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -47,6 +46,21 @@ void Window::initGLFW() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title, NULL, NULL);
+    if(!window) {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return;
+    }
+
+    glfwMakeContextCurrent(window); 
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return;
+    }   
 }
 
 void Window::initImGui() {
@@ -54,9 +68,16 @@ void Window::initImGui() {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     // io.Fonts->AddFontDefault();
-    io.Fonts->AddFontFromFileTTF("../data/ProggyClean.ttf", 32);
+    io.Fonts->AddFontFromFileTTF("data/ProggyClean.ttf", 32);
+
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+                                                        
+    // disable persistent windowing
+    io.IniFilename = nullptr;
+
+    // disable logging
+    io.LogFilename = nullptr;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -68,55 +89,41 @@ void Window::initImGui() {
 }
 
 void Window::initShaders() {
-    std::string vertexPath = "../src/shader/vertex.vs";
-    std::string fragmentPath = "../src/shader/fragment.fs";
+    // TODO apply global shader context
+}
 
-    shader->load(vertexPath, fragmentPath); 
+void Window::initNodes() {
+    
+    Node *node = new Node(); 
+    node->position = glm::vec3(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 0.0f);
+
+    std::string nodeTitle = std::string("Node");
+    Text *text = new Text(nodeTitle);
+
+    nodes.push_back(node);
+    texts.push_back(text);
 }
 
 bool Window::init() {
 
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title, NULL, NULL);
-    if(!window) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-
-        return false;
-    }
-
-    glfwMakeContextCurrent(window); 
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return false;
-    }   
-
+    initGLFW();
     initImGui();
     initShaders();
+    initNodes();
+
+    // TODO check for failed init
 
     return true;
 }
 
 void Window::drawNodes() {
-    shader->use();
-
-    glm::mat4 projection = glm::mat4(1.0f);
-    glm::mat4 view       = glm::mat4(1.0f);
-
-    projection = glm::ortho(0.0f, (float) WINDOW_WIDTH, 0.0f, (float) WINDOW_HEIGHT, -100.0f, 100.0f);
-
-    shader->setMat4("projection", projection);
-    shader->setMat4("view", view);
 
     for(unsigned int i = 0; i < nodes.size(); ++i) {
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, nodes[i]->position);
-        model = glm::scale(model, nodes[i]->scale);
-
-        shader->setMat4("model", model);
-
         nodes[i]->draw();
+    }
+
+    for(unsigned int i = 0; i < texts.size(); ++i) {
+        texts[i]->draw();
     }
 
     #if 0
@@ -168,6 +175,9 @@ void Window::run() {
         ImGui::End();
 
         ImGui::Render();
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
         glDisable(GL_DEPTH_TEST);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);

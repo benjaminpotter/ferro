@@ -5,21 +5,34 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "node.h"
 
 
 Node::Node() {
     initVAO();
+    initShader();
 
     position = glm::vec3(250, 250, 0);
     scale = glm::vec3(100, 100, 0);
+}
+
+Node::~Node() {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+
+    delete shader;
 }
 
 void Node::initVAO() {
     resolution = 100;
 
     float angleSpacing = 2 * M_PI / (resolution-2);
-    float vertices[resolution * 3];
+    float vertices[resolution * 3]; // 3 coords for position
 
     vertices[0] = 0.0f;
     vertices[1] = 0.0f;
@@ -27,19 +40,23 @@ void Node::initVAO() {
 
     for(int i = 1; i < resolution; ++i) {
         float angle = angleSpacing * i;
+        
+        float x = cos(angle);
+        float y = sin(angle);
     
         int index = i*3;
-        vertices[index + 0] = cos(angle); 
-        vertices[index + 1] = sin(angle); 
+        vertices[index + 0] = x; 
+        vertices[index + 1] = y; 
         vertices[index + 2] = 0.0f;
     }
 
     #if 0
     for(int i = 0; i < resolution; ++i) {
         int index = i*3;
-        std::cout << vertices[index + 0] << " "  
+        std::cout 
+            << vertices[index + 0] << " "  
             << vertices[index + 1] << " "
-            << vertices[index + 2]
+            << vertices[index + 2] << " "
             << std::endl;
     }
     #endif
@@ -59,12 +76,32 @@ void Node::initVAO() {
     glBindVertexArray(0);
 }
 
-Node::~Node() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+void Node::initShader() {
+    shader = new Shader();
+
+    std::string nodeSourcePaths[] = { "src/shader/node.vs", "src/shader/node.fs" };
+    shader->load(nodeSourcePaths[0], nodeSourcePaths[1]); 
 }
 
+
 void Node::draw() {
+    
+    shader->use();
+
+    // FIXME these should come from the "global" shader context
+    glm::mat4 projection = glm::mat4(1.0f);
+    glm::mat4 view       = glm::mat4(1.0f);
+
+    projection = glm::ortho(0.0f, (float) 1920, 0.0f, (float) 1080, -100.0f, 100.0f);
+
+    shader->setMat4("projection", projection);
+    shader->setMat4("view", view);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    model = glm::scale(model, scale);
+
+    shader->setMat4("model", model);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLE_FAN, 0, resolution);

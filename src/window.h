@@ -23,13 +23,14 @@ private:
     void initGLFW();
     void initImGui();
     void initShaders();
+    void initNodes();
 
     void drawNodes();
 
 private:
     const char *title;
     GLFWwindow* window;
-    Shader *shader;
 
+    std::vector<Text*> texts;
     std::vector<Node*> nodes;
 };
