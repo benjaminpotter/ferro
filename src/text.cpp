@@ -143,15 +143,7 @@ void Text::initShader() {
 void Text::draw() {
 
     shader->use();
-
-    // FIXME these should come from the "global" shader context
-    glm::mat4 projection = glm::mat4(1.0f);
-    glm::mat4 view       = glm::mat4(1.0f);
-
-    projection = glm::ortho(0.0f, (float) 1920, 0.0f, (float) 1080, -100.0f, 100.0f);
-
-    shader->setMat4("projection", projection);
-    shader->setMat4("view", view);
+    shader->setGlobalContext();
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, position);

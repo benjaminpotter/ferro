@@ -12,6 +12,8 @@ public:
     void load(std::string vertexPath, std::string fragmentPath);
     void use();
 
+    // TODO make this dynamic
+    void setGlobalContext();
     void setMat4(const std::string &name, const glm::mat4 &value);
 
 private:

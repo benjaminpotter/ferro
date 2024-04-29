@@ -6,6 +6,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "shader.h"
 
 Shader::Shader() {
@@ -92,6 +94,19 @@ void Shader::load(std::string vertexPath, std::string fragmentPath) {
 
 void Shader::use() {
     glUseProgram(shaderProgram);
+}
+
+void Shader::setGlobalContext() {
+
+    // TODO where should these things actually be set? by the window?
+    glm::mat4 projection = glm::mat4(1.0f);
+    glm::mat4 view       = glm::mat4(1.0f);
+
+    projection = glm::ortho(0.0f, (float) 1920, 0.0f, (float) 1080, -100.0f, 100.0f);
+
+    setMat4("projection", projection);
+    setMat4("view", view);
+
 }
 
 void Shader::setMat4(const std::string &name, const glm::mat4 &value) {
