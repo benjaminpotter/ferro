@@ -83,7 +83,7 @@ void Text::initVAO() {
 
 void Text::initTexture() {
 
-    int width, height, channels;    
+    int width, height;
     
     width = bitmap.width;
     height = bitmap.rows;
@@ -131,6 +131,7 @@ void Text::generateBitmap() {
     }
 
     bitmap = face->glyph->bitmap; 
+
 }
 
 void Text::initShader() {
