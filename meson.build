@@ -1,36 +1,13 @@
 
-project('wikipedia-scraper', 'c', 'cpp')
+project('ferro', 'c')
 
-curl_dep = dependency('libcurl', required: true)
-xml_dep = dependency('libxml2', required: true)
-glfw_dep = dependency('glfw3', required: true)
-ft2_dep = dependency('freetype2', required: true)
+d_raylib = dependency('raylib', required: true)
+d_curl = dependency('libcurl', required: true)
+d_libxml = dependency('libxml2', required: true)
+dependencies = [d_raylib, d_curl, d_libxml]
 
-headers = include_directories(
-          'extern/glad/include', 
-          'extern/imgui', 
-          'extern/imgui/backends'
-          )
+includes = include_directories('include')
+sources = [ 'source/main.c', 'source/page.c', 'source/fetch.c', 'source/scene.c' ]
 
-sources =  ['src/main.cpp', 
-            'src/fetcher.cpp', 
-            'src/window.cpp', 
-            'src/node.cpp', 
-            'src/shader.cpp',
-            'src/text.cpp']
-sources += ['extern/glad/src/glad.c']
-sources += ['extern/imgui/imgui.cpp', 
-            'extern/imgui/imgui_demo.cpp', 
-            'extern/imgui/imgui_draw.cpp', 
-            'extern/imgui/imgui_tables.cpp',
-            'extern/imgui/imgui_widgets.cpp']
-
-sources += ['extern/imgui/backends/imgui_impl_glfw.cpp', 'extern/imgui/backends/imgui_impl_opengl3.cpp']
-
-executable(
-    'wikipedia-scraper', 
-    sources, 
-    include_directories: headers,
-    dependencies: [curl_dep, xml_dep, glfw_dep, ft2_dep]
-)
+executable('ferro', sources, include_directories: includes, dependencies: dependencies)
 
