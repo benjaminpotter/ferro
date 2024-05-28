@@ -1,9 +1,2 @@
-# Wikipedia Scraper (Ferro)
+## Ferro
 
-## Dependencies
-    - GLFW
-    - OpenGL3
-    - GLM
-    - ImGui
-    - libcURL
-    - SQLite
