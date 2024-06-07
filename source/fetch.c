@@ -54,9 +54,16 @@ static size_t handle_chunk(void *contents, size_t size, size_t nmemb, void* user
 
 
 bool page_html_fetch(page_html *html, const char *url) {
+    if(html == NULL)
+        return false;
+
+    // Default to error state unless otherwise set.
+    bool err = true;
+
     CURL* curl_handle;
     CURLcode res;
     
+    // TODO Integrate the memory_chunk with the page_html strcuture.
     struct memory_chunk chunk;
     
     curl_handle = curl_easy_init();
@@ -66,34 +73,31 @@ bool page_html_fetch(page_html *html, const char *url) {
 
     TraceLog(LOG_INFO, "Fetching %s", url);
     
-    // set request options
+    // Set request options.
     curl_easy_setopt(curl_handle, CURLOPT_URL, url);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, handle_chunk);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void*) &chunk);
     curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
+    // Perform request.
     res = curl_easy_perform(curl_handle);
 
-    bool fail = res != CURLE_OK;
-    if(fail) {
-        
-        // Original C++ code.
-        // std::cerr << "failed: " << curl_easy_strerror(res) << std::endl;
-        // throw;
-        
-        TraceLog(LOG_ERROR, "failed: %s", curl_easy_strerror(res));
+    // If the request is successful and returned data, copy the HTML data.
+    if(res == CURLE_OK && chunk.size != 0) {
+        err = false;
 
-        // TODO Please use a better pattern for error handling.
-        curl_easy_cleanup(curl_handle);
-        return false;
+        // Set number of bytes in HTML.
+        html->bytes = chunk.size;
+
+        // Copy the HTML from the buffer.
+        html->html = (char*) malloc(html->bytes);
+        memcpy(html->html, chunk.memory, html->bytes);
     }
     
-    // Set the page HTML.
-    html->bytes = strlen(chunk.memory) + 1;
-    html->html = chunk.memory;
-
+    // Perform clean up.
+    free(chunk.memory);
     curl_easy_cleanup(curl_handle);
-    return !fail;
+    return !err;
 }
 
 
@@ -103,6 +107,9 @@ bool page_html_extract_title(page_html *html) {
 
     bool err = false;
     xmlInitParser();
+
+    // TODO Some titles are italic so they have an extra <i> tag. Could use
+    // the | operator to also select those.
 
     // XPath expression used to select the title of a wikipedia page.
     const xmlChar* title_xpath = 
@@ -145,9 +152,10 @@ bool page_html_extract_title(page_html *html) {
 
     // Collect the returned nodes.
     nodes = obj->nodesetval;
-    if(nodes == NULL) {
+    if(nodes == NULL || nodes->nodeTab == NULL) {
         TraceLog(LOG_ERROR, "Failed to parse title from HTML.");
 
+        strcpy(html->title, "ENOTITLE");
         goto cleanup_obj;
         err = true;
     }
@@ -174,14 +182,18 @@ bool page_html_extract_links(page_html *html) {
     if(html == NULL)
         return false;
 
-    // TODO Grab links.     
-
     bool err = false;
     xmlInitParser();
 
     // XPath expression used to select the links of a wikipedia page.
-    const xmlChar* link_xpath = 
-        (const xmlChar*) "//a[contains(@href, '/wiki/')]/@href";
+    const xmlChar* link_xpath = (const xmlChar*) 
+        "//div[@class='mw-body-content']"
+        "//a[starts-with(@href,'/wiki/')"
+        "and not(starts-with(@href, '/wiki/File:'))"
+        "and not(starts-with(@href, '/wiki/Wikipedia:'))"
+        "and not(starts-with(@href, '/wiki/Special:'))"
+        "and not(starts-with(@href, '/wiki/Help:'))"
+        "]/@href";
 
     htmlDocPtr doc;
     xmlXPathContextPtr ctx;
@@ -237,13 +249,17 @@ bool page_html_extract_links(page_html *html) {
         char *content = (char*) xml_content;
 
         // TODO There needs to be a better string interface...
-        size_t link_bytes = strlen(content) + 1;
+        const char *url_prefix = "https://en.wikipedia.org";
+        size_t link_bytes = strlen(url_prefix) + strlen(content) + 1;
 
         // Allocate space on the heap for the link text.
         html->links[i] = (char*) malloc(sizeof(char) * link_bytes);
 
         // Copy the link text into the newly allocated space.
-        strcpy(html->links[i], content);
+        // First copying the prefix, then appending the link.
+        strcpy(html->links[i], url_prefix);
+        strcat(html->links[i], content);
+        // TraceLog(LOG_DEBUG, "%s", html->links[i]);
 
         // Deallocate the xml_content string.
         xmlFree(xml_content);

@@ -67,6 +67,19 @@ bool scene_load(scene *s, const char *root_url);
 bool scene_update(scene *s, float dt);
 
 
+/// @brief Renders debug information about the scene.
+///
+/// <ul>
+/// <li>FPS</li>
+/// <li>Number of nodes.</li>
+/// <li>Root node title.</li>
+/// </ul>
+///
+/// @param s A reference to the scene to be updated.
+/// @return True on success, otherwise false.
+bool scene_render_debug_hints(const scene *s);
+
+
 /// @brief Renders the scene.
 ///
 /// @param s A reference to the scene to be rendered.

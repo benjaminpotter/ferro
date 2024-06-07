@@ -14,9 +14,6 @@
 int main(int argc, char* argv[]) {
     
     const char* scn_title = "ferro";
-    const int scn_width = 1920;
-    const int scn_height = 1080;
-
 
     // Set the randomizer's seed.
     // TODO Make this unique each run.
@@ -25,14 +22,21 @@ int main(int argc, char* argv[]) {
     // Set the trace log level to debug for testing.
     SetTraceLogLevel(LOG_DEBUG);
 
+    // Set the target FPS to 120. 
+    SetTargetFPS(120);
+
+    InitWindow(0, 0, scn_title);
+
+    // Load fonts.
+    Font fnt_mono;
+    fnt_mono = LoadFont("resources/fonts/JetBrainsMono-Regular.ttf");
+
     scene s;
-    scene_create(&s, (Vector2) { scn_width, scn_height} );
+    scene_create(&s, (Vector2) { GetMonitorWidth(0), GetMonitorHeight(0)} );
 
     const char *root_url = 
         "https://en.wikipedia.org/wiki/C_(programming_language)";
     scene_load(&s, root_url);
-
-    InitWindow(scn_width, scn_height, scn_title);
 
     // Enter render loop.
     while(!WindowShouldClose()) { 
@@ -42,14 +46,13 @@ int main(int argc, char* argv[]) {
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
-            DrawFPS(scn_width - 100, 0);
-            DrawText("Welcome to Ferro", 0, 0, 40, BLACK);
 
             // Draw the scene to the window.
             scene_render(&s);
         EndDrawing();
     }
 
+    UnloadFont(fnt_mono);
     CloseWindow();
 
     scene_destroy(&s);
